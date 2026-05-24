@@ -1,0 +1,33 @@
+# Keil uVision build artifacts
+Objects/
+Listings/
+*.axf
+*.o
+*.d
+*.elf
+
+# Keil uVision project files
+*.uvguix.*
+*.uvoptx
+*.uvprojx.bak
+
+# Build outputs
+*.build/
+*.bin
+*.hex
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+*.lst
+
+# Debug files
+DebugConfig/*.dbgconf

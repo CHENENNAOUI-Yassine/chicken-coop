@@ -1,0 +1,47 @@
+{
+  "readings": [
+    {
+      "temperature": 22.5,
+      "timestamp": "2026-05-03T13:17:45.932091",
+      "status": "\ud83d\ude0a GOOD"
+    },
+    {
+      "temperature": 32.5,
+      "timestamp": "2026-05-03T13:22:01.528433",
+      "status": "\ud83d\udd25 ALERT - TOO HOT"
+    },
+    {
+      "temperature": 25.0,
+      "timestamp": "2026-05-03T13:48:28.619911",
+      "status": "FREEZING"
+    },
+    {
+      "temperature": 10.0,
+      "timestamp": "2026-05-03T14:05:55.434051",
+      "status": "FREEZING"
+    },
+    {
+      "temperature": 33.0,
+      "timestamp": "2026-05-03T14:07:17.622621",
+      "status": "ALERT"
+    },
+    {
+      "temperature": 22.0,
+      "timestamp": "2026-05-03T14:36:36.809347",
+      "status": "GOOD"
+    },
+    {
+      "temperature": 37.0,
+      "timestamp": "2026-05-03T18:47:13.867248",
+      "status": "ALERT"
+    },
+    {
+      "temperature": 8.0,
+      "timestamp": "2026-05-03T18:47:37.837043",
+      "status": "FREEZING"
+    }
+  ],
+  "current_temp": 8.0,
+  "status": "FREEZING",
+  "last_updated": "2026-05-03T18:47:37.837043"
+}
