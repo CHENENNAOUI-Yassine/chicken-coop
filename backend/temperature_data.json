@@ -39,9 +39,14 @@
       "temperature": 8.0,
       "timestamp": "2026-05-03T18:47:37.837043",
       "status": "FREEZING"
+    },
+    {
+      "temperature": 22.5,
+      "timestamp": "2026-05-24T18:23:17.378904",
+      "status": "GOOD"
     }
   ],
-  "current_temp": 8.0,
-  "status": "FREEZING",
-  "last_updated": "2026-05-03T18:47:37.837043"
+  "current_temp": 22.5,
+  "status": "GOOD",
+  "last_updated": "2026-05-24T18:23:17.378904"
 }
