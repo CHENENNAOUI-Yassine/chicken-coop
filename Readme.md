@@ -35,7 +35,159 @@ chicken-temp-monitor/
 backend/               # Backend server code (if applicable)
 ```
 
-## Building the Project
+## Render Cloud Deployment
+
+This project uses **Render** (https://render.com) to host the backend Flask API that receives and stores temperature data from the ESP8266 module.
+
+### Why Render?
+
+- **Free tier** available for development and testing
+- **HTTPS support** out of the box (required for secure data transmission)
+- **Simple deployment** directly from GitHub
+- **No credit card** required for free tier (with some limitations)
+- **Automatic SSL certificates** (port 443)
+
+### Setup Instructions
+
+#### Step 1: Create a Render Account
+
+1. Go to https://render.com
+2. Click "Sign Up"
+3. Use your GitHub account or email to create a free account
+4. Verify your email address
+
+#### Step 2: Fork or Clone This Repository
+
+Since this is your personal repository, you already own it. If cloning for the first time:
+
+```bash
+git clone https://github.com/CHENENNAOUI-Yassine/chicken-coop.git
+cd chicken-coop
+```
+
+#### Step 3: Create a Web Service on Render
+
+1. Log into your Render dashboard: https://dashboard.render.com
+2. Click **"New +"** → **"Web Service"**
+3. Select **"GitHub"** as the source
+4. Search for and select your **chicken-coop** repository
+5. Fill in the deployment form:
+   - **Name**: chicken-coop (or your preferred name)
+   - **Environment**: Python
+   - **Region**: Select closest to you (e.g., US or Europe)
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn -w 1 -b 0.0.0.0:$PORT backend.app:app`
+   - **Plan**: Free (Starter)
+
+6. Click **"Create Web Service"**
+
+#### Step 4: Get Your Render URL
+
+1. After deployment completes (~2-3 minutes), Render displays your service URL
+2. It will look like: `https://chicken-coop-xxxxx.onrender.com`
+3. **Note**: The URL format is `https://[service-name].onrender.com`
+
+#### Step 5: Update the Microcontroller Configuration
+
+You must tell the ESP8266 module your new Render URL. Use the **Config Updater Agent**:
+
+1. In Copilot Chat, type `/Config Updater`
+2. Select option: **3. Render Backend URL (for HTTPS temperature data)**
+3. Enter your Render URL (e.g., `chicken-coop-xxxxx.onrender.com` without `https://`)
+4. The agent updates:
+   - `main.c` with the new Render URL in `ESP_SendTempJSON()`
+   - `README.md` to document the change
+5. Recompile and flash the firmware to your STM32F407
+
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ STM32F407 Microcontroller (Chicken Coop)                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  DS1621 Temperature Sensor ─┐                               │
+│                             I2C                             │
+│                             ↓                               │
+│  [Temperature Reading] → [Process Data] → [ESP8266 Module]  │
+│                                           (WiFi)            │
+│                                             ↓               │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              │ HTTPS (SSL, port 443)
+                              │ POST /api/temperature
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Render Backend (Cloud)                                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  Flask API Server (Flask + Gunicorn)                        │
+│  ├─ POST /api/temperature ← Receives temp data              │
+│  ├─ GET /api/status ← Retrieves current status             │
+│  ├─ POST /api/reset ← Clears stored data                   │
+│  └─ / ← Web dashboard (static HTML)                         │
+│                                                               │
+│  Data Storage: temperature_data.json                        │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+                    [Data Displayed on Web Dashboard]
+```
+
+### How It Works
+
+1. **Microcontroller Reads Temperature**: DS1621 sensor provides temperature via I2C
+2. **ESP8266 Connects to WiFi**: Establishes WiFi connection to configured SSID
+3. **HTTPS Request Sent**: ESP8266 sends SSL/TLS connection to your Render URL on port 443
+4. **JSON Data Transmitted**: Temperature data sent as JSON in HTTP POST request
+5. **Render Processes Request**: Flask backend receives, validates, and stores data
+6. **Response Sent Back**: HTTP 200 OK response sent to ESP8266
+7. **Data Stored Locally**: JSON stored in `backend/temperature_data.json`
+8. **Dashboard Updated**: Web interface shows current temperature and recent readings
+
+### Testing the Connection
+
+Once deployed, test your Render backend:
+
+```bash
+# Check if service is running
+curl https://YOUR_RENDER_URL/api/status
+
+# Send a test temperature reading
+curl -X POST https://YOUR_RENDER_URL/api/temperature \
+  -H "Content-Type: application/json" \
+  -d '{"temperature": 22.5}'
+
+# Get current status
+curl https://YOUR_RENDER_URL/api/status
+```
+
+### Render Free Plan Limitations & Solutions
+
+| Limitation | Impact | Solution |
+|-----------|--------|----------|
+| Service spins down after 15 min of inactivity | Slow first request after idle | Configure ESP to send data every 5 min (default) |
+| Limited compute | None for this project | Flask + Gunicorn easily handles sensor data |
+| Limited storage | ~1GB available | JSON file grows slowly (~10KB per day) |
+
+**Note**: For production use, upgrade to a paid Render plan or use a different hosting provider.
+
+### Changing Your Render URL
+
+To change your Render deployment URL (e.g., redeploy with different name):
+
+1. **Update Render Service**: 
+   - Log into Render dashboard
+   - Modify service name and redeploy
+   - Note the new URL
+
+2. **Update Microcontroller**:
+   - Use Config Updater Agent in Copilot Chat
+   - Select "3. Render Backend URL"
+   - Enter new URL
+   - Recompile and upload to STM32F407
+
+
 
 This project uses **Keil µVision5** IDE. To build:
 
@@ -189,8 +341,9 @@ This project includes a custom **Config Updater** agent that simplifies configur
 2. The agent will ask which setting you want to change:
    - WiFi Network Name (SSID)
    - WiFi Password
-   - ESP Server IP Address
-   - Server Port Number
+   - **Render Backend URL** (new!) - for HTTPS data transmission to cloud
+   - ESP Server IP Address (legacy)
+   - Server Port Number (legacy)
    - RTC Wakeup Interval (in seconds)
    - CallMeBot Phone Number (for WhatsApp alerts)
    - CallMeBot API Key (for WhatsApp alerts)
@@ -200,14 +353,16 @@ This project includes a custom **Config Updater** agent that simplifies configur
    - `main.c` - Function calls
    - `README.md` - Documentation
 
-**Example usage:**
+**Example usage (Render URL update):**
 ```
 User: "/Config Updater"
-Agent: "What would you like to configure? (1) WiFi SSID (2) WiFi Password (3) Server IP ..."
+Agent: "What would you like to configure?"
 User: "3"
-Agent: "Current Server IP: 10.119.156.219. Enter new IP:"
-User: "192.168.1.100"
-Agent: "✓ Updated ESP.h and main.c with new IP: 192.168.1.100"
+Agent: "Current Render URL: chicken-coop-xxxxx.onrender.com"
+Agent: "Enter new Render URL (without https://):"
+User: "my-chicken-coop.onrender.com"
+Agent: "✓ Updated main.c with new Render URL"
+Agent: "✓ Updated README.md"
 ```
 
 **Files modified:**

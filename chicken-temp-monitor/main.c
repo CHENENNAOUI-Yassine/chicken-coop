@@ -43,7 +43,7 @@ int main(void)
     // Check temperature and send WhatsApp alert if needed
     ESP_SendWhatsAppAlert(temperature);
 
-    ESP_SendTempJSON("10.119.156.219", 80);
+    ESP_SendTempJSON("chicken-coop.onrender.com", 443);
 
     ESP_SendDataToServer("10.119.156.219", 80);
 

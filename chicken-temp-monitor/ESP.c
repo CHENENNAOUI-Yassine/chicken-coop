@@ -43,6 +43,15 @@ void ESP_OpenTCPConnection(const char *serverIP, uint16_t serverPort) {
     ClearBuffer(cmdBuffer, sizeof(cmdBuffer));
 }
 
+// Function to open an SSL connection with the server
+void ESP_OpenSSLConnection(const char *serverHost, uint16_t serverPort) {
+    
+    // Open the SSL connection to the server
+    sprintf(cmdBuffer, "AT+CIPSTART=\"SSL\",\"%s\",%d\r\n", serverHost, serverPort);
+    ESP_SendCommand(cmdBuffer, "\r\nOK\r\n", 5000);  // Wait for "CONNECT" response (5000ms for SSL handshake)
+    ClearBuffer(cmdBuffer, sizeof(cmdBuffer));
+}
+
 // Function to close the TCP connection with the server
 void ESP_CloseTCPConnection(void) {
     // Close the TCP connection
@@ -126,7 +135,7 @@ void ESP_SendWhatsAppAlert(float temp)
 
 
 
-void ESP_SendTempJSON(const char *serverIP, uint16_t serverPort)
+void ESP_SendTempJSON(const char *serverHost, uint16_t serverPort)
 {
     // Build JSON body: {"temperature":25.50}
     char jsonBody[64];
@@ -134,7 +143,7 @@ void ESP_SendTempJSON(const char *serverIP, uint16_t serverPort)
     int bodyLen = strlen(jsonBody);
 
     // Build full HTTP POST request
-    char httpRequest[300];
+    char httpRequest[400];
     sprintf(httpRequest,
             "POST /api/temperature HTTP/1.1\r\n"
             "Host: %s\r\n"
@@ -143,12 +152,12 @@ void ESP_SendTempJSON(const char *serverIP, uint16_t serverPort)
             "Connection: close\r\n"
             "\r\n"
             "%s",
-            serverIP, bodyLen, jsonBody);
+            serverHost, bodyLen, jsonBody);
 
     int requestLen = strlen(httpRequest);
 
-    // Step 1: Open TCP connection
-    ESP_OpenTCPConnection(serverIP, serverPort);
+    // Step 1: Open SSL connection
+    ESP_OpenSSLConnection(serverHost, serverPort);
 
     // Step 2: Tell ESP how many bytes we're sending
     sprintf(cmdBuffer, "AT+CIPSEND=%d\r\n", requestLen);

@@ -39,6 +39,8 @@ void waitForResponse(char* expectedResponse);
 
 void ESP_OpenTCPConnection(const char *serverIP, uint16_t serverPort);
 
+void ESP_OpenSSLConnection(const char *serverHost, uint16_t serverPort);
+
 void ESP_CloseTCPConnection(void);
 
 void ESP_SendDataToServer(const char *serverIP, uint16_t serverPort);
