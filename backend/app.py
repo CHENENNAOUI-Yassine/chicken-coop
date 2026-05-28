@@ -11,6 +11,17 @@ DATA_FILE = "temperature_data.json"
 
 
 # -----------------------
+# Prevent HTTPS redirect on Render
+# -----------------------
+@app.before_request
+def allow_http():
+    """Allow HTTP connections without redirect (for ESP8266 compatibility)"""
+    # Do NOT redirect HTTP to HTTPS
+    # ESP8266 uses HTTP over SSL, so we need to accept both
+    pass
+
+
+# -----------------------
 # Helpers
 # -----------------------
 def load_data():
