@@ -173,7 +173,7 @@ void ESP_WakeRender(const char *serverHost, uint16_t serverPort)
     ESP_CloseTCPConnection();
 }
 
-void ESP_SendTempJSON(const char *serverHost, uint16_t serverPort)
+uint8_t ESP_SendTempJSON(const char *serverHost, uint16_t serverPort)
 {
     // Clear buffer to avoid stale data matching
     ClearBuffer(CpyBuffer, sizeof(CpyBuffer));
