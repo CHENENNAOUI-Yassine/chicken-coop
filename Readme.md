@@ -77,6 +77,7 @@ cd chicken-coop
    - **Region**: Select closest to you (e.g., US or Europe)
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn -w 1 -b 0.0.0.0:$PORT backend.app:app`
+     - ⚠️ **Important**: Use `backend.app:app` (NOT just `app:app`) because the Flask app is in the `backend/` folder
    - **Plan**: Free (Starter)
 
 6. Click **"Create Web Service"**
@@ -162,7 +163,26 @@ curl -X POST https://YOUR_RENDER_URL/api/temperature \
 curl https://YOUR_RENDER_URL/api/status
 ```
 
-### Render Free Plan Limitations & Solutions
+### Troubleshooting Render Deployment
+
+#### Error: `ModuleNotFoundError: No module named 'app'`
+
+**Cause**: The Start Command is set to `gunicorn app:app` instead of `gunicorn -w 1 -b 0.0.0.0:$PORT backend.app:app`
+
+**Solution**:
+1. Go to your Render dashboard: https://dashboard.render.com
+2. Click on your **chicken-coop** service
+3. Go to **Settings** → **Start Command**
+4. **Replace** the command with:
+   ```
+   gunicorn -w 1 -b 0.0.0.0:$PORT backend.app:app
+   ```
+5. Click **"Save"** (Render will automatically redeploy)
+6. Wait 2-3 minutes for deployment to complete
+
+**Why?**: Your Flask app is in `backend/app.py`, so gunicorn needs to know where to find it using `backend.app:app` instead of just `app:app`.
+
+
 
 | Limitation | Impact | Solution |
 |-----------|--------|----------|
