@@ -104,6 +104,16 @@ def get_status_route():
     })
 
 
+@app.route('/api/status-http', methods=['GET'])
+def status_http():
+    file_data = load_data()
+    return jsonify({
+        "current_temp": file_data.get("current_temp"),
+        "status": file_data.get("status"),
+        "last_updated": file_data.get("last_updated")
+    })
+
+
 @app.route('/api/reset', methods=['POST'])
 def reset_data():
     empty = {"readings": [], "current_temp": None, "status": "unknown"}
