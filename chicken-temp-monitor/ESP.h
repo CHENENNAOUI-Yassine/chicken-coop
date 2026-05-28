@@ -47,6 +47,8 @@ void ESP_SendDataToServer(const char *serverIP, uint16_t serverPort);
 
 void ESP_SendWhatsAppAlert(float temp);
 
-void ESP_SendTempJSON(const char *serverIP, uint16_t serverPort);
+void ESP_WakeRender(const char *serverHost, uint16_t serverPort);
+
+uint8_t ESP_SendTempJSON(const char *serverHost, uint16_t serverPort);
 
 #endif // ESP_UTILS_H

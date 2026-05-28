@@ -43,7 +43,18 @@ int main(void)
     // Check temperature and send WhatsApp alert if needed
     ESP_SendWhatsAppAlert(temperature);
 
-    ESP_SendTempJSON("chicken-coop.onrender.com", 443);
+    // Wake Render dyno before sending data
+    ESP_WakeRender("chicken-coop.onrender.com", 443);
+
+    // Send temperature data to Render with retry logic
+    uint8_t sendResult = ESP_SendTempJSON("chicken-coop.onrender.com", 443);
+    if (sendResult == 0)
+    {
+        // Cold start detected - Render needs more time
+        SendTxt_usart3("Render cold start - retrying in 20s...\r\n");
+        delay_ms(20000);
+        ESP_SendTempJSON("chicken-coop.onrender.com", 443);
+    }
 
     ESP_SendDataToServer("10.119.156.219", 80);
 

@@ -135,8 +135,49 @@ void ESP_SendWhatsAppAlert(float temp)
 
 
 
+/*
+ * Function to wake Render dyno before sending temperature data
+ * Sends a GET /health request and waits for response
+ */
+void ESP_WakeRender(const char *serverHost, uint16_t serverPort)
+{
+    // Clear buffer to avoid stale data matching
+    ClearBuffer(CpyBuffer, sizeof(CpyBuffer));
+    
+    // Build simple GET request for health check
+    char healthRequest[200];
+    sprintf(healthRequest,
+            "GET /api/status HTTP/1.1\r\n"
+            "Host: %s\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            serverHost);
+
+    int requestLen = strlen(healthRequest);
+
+    // Open SSL connection
+    ESP_OpenSSLConnection(serverHost, serverPort);
+
+    // Tell ESP how many bytes we're sending
+    sprintf(cmdBuffer, "AT+CIPSEND=%d\r\n", requestLen);
+    ESP_SendCommand(cmdBuffer, ">", 5000);
+
+    // Send the GET request
+    SendTxt_usart2(healthRequest);
+    waitForResponse("\r\nSEND OK\r\n");
+
+    // Wait 15 seconds for Render dyno to wake up
+    delay_ms(15000);
+
+    // Close connection
+    ESP_CloseTCPConnection();
+}
+
 void ESP_SendTempJSON(const char *serverHost, uint16_t serverPort)
 {
+    // Clear buffer to avoid stale data matching
+    ClearBuffer(CpyBuffer, sizeof(CpyBuffer));
+    
     // Build JSON body: {"temperature":25.50}
     char jsonBody[64];
     sprintf(jsonBody, "{\"temperature\":%.2f}", temperature);
@@ -172,4 +213,11 @@ void ESP_SendTempJSON(const char *serverHost, uint16_t serverPort)
 
     // Step 5: Close TCP connection
     ESP_CloseTCPConnection();
+    
+    // Step 6: Check if response contains "200 OK"
+    if (strstr(CpyBuffer, "200 OK") != NULL)
+    {
+        return 1;  // Success
+    }
+    return 0;  // Failure
 }
